@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,9 +11,6 @@ import (
 
 	"go-objectstore/config"
 )
-
-//go:embed web/index.html
-var indexHTML []byte
 
 type UploadResponse struct {
 	Message string `json:"message"`
@@ -27,15 +23,6 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 }
 
 // usage
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(indexHTML)
-}
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -81,8 +68,7 @@ func main() {
 		log.Fatalf("cannot create storage directory %q: %v", config.StoragePath, err)
 	}
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/api/upload", uploadHandler)
 
 	fmt.Println("Server starting on port 8080...")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

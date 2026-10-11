@@ -4,3 +4,4 @@
 .env
 /tmp
 app.log
+/start.sh
