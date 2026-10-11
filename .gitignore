@@ -2,3 +2,5 @@
 
 /data
 .env
+/tmp
+app.log

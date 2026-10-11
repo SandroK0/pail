@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Object Store</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --border: #d2d2d7;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --ok: #15803d;
+    --err: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f12;
+      --card: #1a1a1f;
+      --text: #f5f5f7;
+      --muted: #9a9aa3;
+      --border: #2e2e36;
+      --accent: #818cf8;
+      --accent-hover: #a5b4fc;
+      --ok: #4ade80;
+      --err: #f87171;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
+  }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p.sub { margin: 0 0 24px; color: var(--muted); }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 6px 0 20px; }
+  .drop {
+    display: block;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    margin-bottom: 20px;
+    font-weight: normal;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .drop strong { color: var(--text); word-break: break-all; }
+  .drop input { display: none; }
+  button {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: .5; cursor: default; }
+  #status { margin: 16px 0 0; min-height: 1.5em; font-size: 14px; word-break: break-all; }
+  #status.ok { color: var(--ok); }
+  #status.err { color: var(--err); }
+</style>
+</head>
+<body>
+  <form class="card" id="form">
+    <h1>Upload a file</h1>
+    <p class="sub">Store a file at any path.</p>
+
+    <label for="path">Path</label>
+    <input type="text" id="path" name="path" placeholder="images/2026/photo.jpg" autocomplete="off">
+    <p class="hint">Leave empty to use the file's name. End with <code>/</code> to put it in a folder.</p>
+
+    <label class="drop" id="drop">
+      <input type="file" id="file" name="file" required>
+      <span id="dropText">Drop a file here or <strong>browse</strong></span>
+    </label>
+
+    <button type="submit" id="submit">Upload</button>
+    <p id="status"></p>
+  </form>
+
+<script>
+  const form = document.getElementById('form');
+  const fileInput = document.getElementById('file');
+  const drop = document.getElementById('drop');
+  const dropText = document.getElementById('dropText');
+  const status = document.getElementById('status');
+  const submit = document.getElementById('submit');
+
+  function showFile() {
+    const f = fileInput.files[0];
+    dropText.innerHTML = '';
+    if (f) {
+      const s = document.createElement('strong');
+      s.textContent = f.name;
+      dropText.append(s);
+    } else {
+      dropText.innerHTML = 'Drop a file here or <strong>browse</strong>';
+    }
+  }
+
+  fileInput.addEventListener('change', showFile);
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('over');
+    fileInput.files = e.dataTransfer.files;
+    showFile();
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!fileInput.files[0]) return;
+    submit.disabled = true;
+    status.className = '';
+    status.textContent = 'Uploading…';
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: new FormData(form) });
+      const text = await res.text();
+      status.className = res.ok ? 'ok' : 'err';
+      status.textContent = text.trim();
+      if (res.ok) { form.reset(); showFile(); }
+    } catch (err) {
+      status.className = 'err';
+      status.textContent = 'Upload failed: ' + err.message;
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
