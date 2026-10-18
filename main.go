@@ -12,7 +12,7 @@ import (
 	"go-objectstore/config"
 )
 
-type UploadResponse struct {
+type JsonResponse struct {
 	Message string `json:"message"`
 }
 
@@ -22,36 +22,43 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 
-// usage
-
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+		writeJSON(w, http.StatusBadRequest, JsonResponse{Message: "Error retrieving the file from the request"})
 		return
 	}
 	defer file.Close()
 
+	path := r.FormValue("path")
+	dirPath := filepath.Join(config.StoragePath, path)
+	err = os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error creating the directory"})
+		return
+	}
+
 	fileName := header.Filename
-	filePath := filepath.Join(config.StoragePath, fileName)
+	filePath := filepath.Join(dirPath, fileName)
 
 	createdFile, err := os.Create(filePath)
 	if err != nil {
-		// What should we return to client in cases like this, real reason or some generic error?
-		log.Printf("Could not create a file")
+		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error creating the file"})
+		return
 	}
 
 	_, err = io.Copy(createdFile, file)
 	if err != nil {
-		log.Printf("Could not copy file contents")
+		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error saving the file"})
+		return
 	}
+	createdFile.Close()
 
-	writeJSON(w, http.StatusOK, UploadResponse{Message: "Testing"})
+	writeJSON(w, http.StatusOK, JsonResponse{Message: "File uploaded successfully"})
 }
 
 func main() {
