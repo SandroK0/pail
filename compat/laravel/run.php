@@ -112,7 +112,12 @@ check('temporaryUrl with download name', function () use ($disk, $root) {
 
     return in_array('Content-Disposition: attachment; filename=hi.txt', $headers, true);
 });
-check('temporaryUrl tampering is rejected', fn () => http('GET', str_replace('hello.txt', 'pub.txt', $disk->temporaryUrl("$root/hello.txt", new DateTime('+5 minutes'))))[0] === 403);
+// Signatures are only checked with AUTH=verify (expiry always is).
+if (json_decode(http('GET', "$endpoint/_api/info")[1], true)['verifyAuth'] ?? false) {
+    check('temporaryUrl tampering is rejected', fn () => http('GET', str_replace('hello.txt', 'pub.txt', $disk->temporaryUrl("$root/hello.txt", new DateTime('+5 minutes'))))[0] === 403);
+} else {
+    echo "  - temporaryUrl tampering (skipped: server runs with AUTH=off)\n";
+}
 check('temporaryUploadUrl', function () use ($disk, $root) {
     ['url' => $url] = $disk->temporaryUploadUrl("$root/direct.txt", new DateTime('+5 minutes'));
     [$status] = http('PUT', $url, 'uploaded directly');
