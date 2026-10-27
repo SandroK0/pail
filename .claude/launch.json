@@ -3,30 +3,20 @@
   "configurations": [
     {
       "name": "pail",
-      "runtimeExecutable": "go",
-      "runtimeArgs": [
-        "run",
-        "."
-      ],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "go build -o bin/pail . && exec bin/pail"],
       "port": 8080
     },
     {
       "name": "pail-verify",
       "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "AUTH=verify exec go run ."
-      ],
+      "runtimeArgs": ["-c", "go build -o bin/pail . && AUTH=verify exec bin/pail"],
       "port": 8080
     },
     {
       "name": "playground",
       "runtimeExecutable": "php",
-      "runtimeArgs": [
-        "playground/artisan",
-        "serve",
-        "--port=8000"
-      ],
+      "runtimeArgs": ["playground/artisan", "serve", "--port=8000"],
       "port": 8000
     }
   ]
