@@ -15,11 +15,15 @@ import (
 	"github.com/SandroK0/pail/config"
 	"github.com/SandroK0/pail/internal/adminapi"
 	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/pail/internal/mcpserver"
 	"github.com/SandroK0/pail/internal/s3api"
 	"github.com/SandroK0/pail/internal/server"
 	"github.com/SandroK0/pail/internal/store"
 	"github.com/SandroK0/pail/web"
 )
+
+// version is set at build time with -ldflags "-X main.version=...".
+var version = "dev"
 
 func main() {
 	if err := run(); err != nil {
@@ -72,11 +76,25 @@ func run() error {
 		SecretKey:  cfg.SecretKey,
 		VerifyAuth: cfg.VerifyAuth,
 		Buckets:    cfg.Buckets,
+		MCP:        cfg.MCP,
 	})
+
+	var mcpHandler http.Handler
+	if cfg.MCP {
+		mcpHandler = mcpserver.New(st, broker, mcpserver.Config{
+			PublicURL:  cfg.PublicURL,
+			Region:     cfg.Region,
+			AccessKey:  cfg.AccessKey,
+			SecretKey:  cfg.SecretKey,
+			VerifyAuth: cfg.VerifyAuth,
+			Buckets:    cfg.Buckets,
+			Version:    version,
+		})
+	}
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
-		Handler:           server.New(s3, admin, web.FS()),
+		Handler:           server.New(s3, admin, mcpHandler, web.FS()),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -106,6 +124,10 @@ func printBanner(cfg config.Config) {
 	if cfg.VerifyAuth {
 		auth = "verify"
 	}
+	mcp := "off"
+	if cfg.MCP {
+		mcp = cfg.PublicURL + "/_mcp   (claude mcp add --transport http pail " + cfg.PublicURL + "/_mcp)"
+	}
 	fmt.Printf(`
   pail is running
 
@@ -113,6 +135,7 @@ func printBanner(cfg config.Config) {
   S3        %[1]s
   Data      %[2]s
   Auth      %[3]s
+  MCP       %[8]s
 
   Laravel .env:
     FILESYSTEM_DISK=s3
@@ -124,5 +147,5 @@ func printBanner(cfg config.Config) {
     AWS_USE_PATH_STYLE_ENDPOINT=true
     AWS_URL=%[1]s/%[7]s
 
-`, cfg.PublicURL, cfg.DataDir, auth, cfg.AccessKey, cfg.SecretKey, cfg.Region, bucket)
+`, cfg.PublicURL, cfg.DataDir, auth, cfg.AccessKey, cfg.SecretKey, cfg.Region, bucket, mcp)
 }

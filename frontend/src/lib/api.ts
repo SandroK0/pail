@@ -38,6 +38,7 @@ export type Info = {
   secretKey: string
   verifyAuth: boolean
   defaultBucket: string
+  mcp: boolean
 }
 
 export type SelftestStep = {
@@ -65,6 +66,7 @@ export type RequestEvent = {
   accessKey?: string
   presigned?: boolean
   userAgent?: string
+  requestId?: string
 }
 
 export class ApiError extends Error {

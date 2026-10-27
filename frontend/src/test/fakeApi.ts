@@ -20,6 +20,7 @@ const baseInfo: Info = {
   secretKey: 'localsecret',
   verifyAuth: false,
   defaultBucket: 'laravel',
+  mcp: true,
 }
 
 /**

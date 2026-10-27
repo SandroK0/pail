@@ -24,6 +24,7 @@ func TestDefaults(t *testing.T) {
 		Buckets:     []string{"laravel"},
 		CORSOrigins: []string{"*"},
 		LogFile:     "app.log",
+		MCP:         true,
 	}
 	if !reflect.DeepEqual(c, want) {
 		t.Fatalf("got  %+v\nwant %+v", c, want)
@@ -40,12 +41,13 @@ func TestOverrides(t *testing.T) {
 		"AUTO_CREATE_BUCKETS": "true",
 		"CORS_ORIGINS":        "http://app.test,http://admin.test",
 		"LOG_FILE":            "off",
+		"MCP":                 "off",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if c.Addr != "127.0.0.1:9000" || c.DataDir != "/srv/data" || c.PublicURL != "http://s3.test" ||
-		!c.VerifyAuth || !c.AutoCreateBuckets || c.LogFile != "" {
+		!c.VerifyAuth || !c.AutoCreateBuckets || c.LogFile != "" || c.MCP {
 		t.Fatalf("config = %+v", c)
 	}
 	if !reflect.DeepEqual(c.Buckets, []string{"app", "media"}) || len(c.CORSOrigins) != 2 {
@@ -71,6 +73,9 @@ func TestIgnoresLegacyStoragePath(t *testing.T) {
 func TestInvalid(t *testing.T) {
 	if _, err := FromEnv(env(map[string]string{"AUTH": "maybe"})); err == nil {
 		t.Error("bad AUTH accepted")
+	}
+	if _, err := FromEnv(env(map[string]string{"MCP": "maybe"})); err == nil {
+		t.Error("bad MCP accepted")
 	}
 	if _, err := FromEnv(env(map[string]string{"AUTO_CREATE_BUCKETS": "sometimes"})); err == nil {
 		t.Error("bad AUTO_CREATE_BUCKETS accepted")

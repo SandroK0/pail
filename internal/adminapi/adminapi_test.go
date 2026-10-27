@@ -44,7 +44,7 @@ func newEnv(t *testing.T, verify bool) *env {
 	t.Cleanup(e.srv.Close)
 	e.api = New(st, broker, Config{
 		PublicURL: e.srv.URL, Region: "us-east-1", AccessKey: "local", SecretKey: "localsecret",
-		VerifyAuth: verify, Buckets: []string{"laravel"},
+		VerifyAuth: verify, Buckets: []string{"laravel"}, MCP: true,
 	})
 	if err := st.CreateBucket(t.Context(), "laravel"); err != nil {
 		t.Fatal(err)
@@ -96,7 +96,7 @@ func TestInfo(t *testing.T) {
 	if e.call(t, "GET", "/_api/info", nil, &info) != 200 {
 		t.Fatal("status")
 	}
-	if info.Endpoint != e.srv.URL || info.AccessKey != "local" || info.DefaultBucket != "laravel" || info.Region != "us-east-1" {
+	if info.Endpoint != e.srv.URL || info.AccessKey != "local" || info.DefaultBucket != "laravel" || info.Region != "us-east-1" || !info.MCP {
 		t.Fatalf("info = %+v", info)
 	}
 }

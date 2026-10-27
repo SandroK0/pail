@@ -9,6 +9,10 @@ import type { Info } from '../lib/api'
 import { formatDuration } from '../lib/format'
 import { PageHeader } from './Layout'
 
+export function mcpCommand(info: Info): string {
+  return `claude mcp add --transport http pail ${info.endpoint}/_mcp`
+}
+
 export function envBlock(info: Info, bucket: string): string {
   return [
     'FILESYSTEM_DISK=s3',
@@ -151,6 +155,20 @@ export function Setup() {
               <Section title="Try it" description="In php artisan tinker:">
                 <Code>{tinker}</Code>
               </Section>
+
+              {info.data.mcp && (
+                <Section
+                  title="AI assistants (MCP)"
+                  description="Let Claude Code or any MCP client look at your buckets, files and the request log."
+                >
+                  <CopyField value={mcpCommand(info.data)} label="Copy MCP command" />
+                  <p className="mt-2 text-muted">
+                    Other clients: add a streamable HTTP server at{' '}
+                    <code className="font-mono text-xs text-fg">{info.data.endpoint}/_mcp</code>. Tools are read-only,
+                    so you can ask things like “why did my last upload fail?” or “what's in avatars/?”.
+                  </p>
+                </Section>
+              )}
 
               <Section title="Browser uploads" description="For direct uploads with temporaryUploadUrl().">
                 <p className="text-muted">

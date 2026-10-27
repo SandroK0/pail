@@ -33,7 +33,7 @@ func serve(h http.Handler, method, target string, hdr map[string]string) *httpte
 }
 
 func TestRouting(t *testing.T) {
-	h := New(tag("s3"), tag("admin"), builtUI)
+	h := New(tag("s3"), tag("admin"), tag("mcp"), builtUI)
 	browser := map[string]string{"Accept": "text/html,application/xhtml+xml"}
 
 	cases := []struct {
@@ -56,6 +56,8 @@ func TestRouting(t *testing.T) {
 		{"GET", "/_ui/assets/missing.js", nil, 404, "", ""},
 		{"GET", "/favicon.ico", nil, 301, "", "/_ui/favicon.svg"},
 		{"GET", "/_apiish/x", nil, 200, "s3 /_apiish/x", ""},
+		{"POST", "/_mcp", nil, 200, "mcp /_mcp", ""},
+		{"POST", "/_mcpx", nil, 200, "s3 /_mcpx", ""},
 	}
 	for _, c := range cases {
 		rec := serve(h, c.method, c.target, c.hdr)
@@ -72,8 +74,15 @@ func TestRouting(t *testing.T) {
 	}
 }
 
+func TestMCPDisabled(t *testing.T) {
+	rec := serve(New(tag("s3"), tag("admin"), nil, builtUI), "POST", "/_mcp", nil)
+	if rec.Code != 404 || !strings.Contains(rec.Body.String(), "MCP=off") {
+		t.Fatalf("disabled MCP: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestBrowserDetectionNeedsNoAuth(t *testing.T) {
-	h := New(tag("s3"), tag("admin"), builtUI)
+	h := New(tag("s3"), tag("admin"), tag("mcp"), builtUI)
 	rec := serve(h, "GET", "/", map[string]string{"Accept": "text/html", "Authorization": "AWS4-HMAC-SHA256 ..."})
 	if rec.Code != 200 || rec.Body.String() != "s3 /" {
 		t.Fatalf("signed request was treated as a browser: %d", rec.Code)

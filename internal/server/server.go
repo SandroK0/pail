@@ -1,5 +1,5 @@
 // Package server routes one port between the S3 API, the admin JSON API
-// (/_api) and the web UI (/_ui). S3 bucket names cannot contain "_", so the
+// (/_api), the MCP endpoint (/_mcp) and the web UI (/_ui). S3 bucket names cannot contain "_", so the
 // prefixes never collide with a bucket.
 package server
 
@@ -9,13 +9,20 @@ import (
 	"strings"
 )
 
-func New(s3, admin http.Handler, ui fs.FS) http.Handler {
+// New routes requests. mcp may be nil when MCP is disabled.
+func New(s3, admin, mcp http.Handler, ui fs.FS) http.Handler {
 	uiHandler := UI(ui)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		p := r.URL.Path
 		switch {
 		case strings.HasPrefix(p, "/_api/"):
 			admin.ServeHTTP(w, r)
+		case p == "/_mcp":
+			if mcp == nil {
+				http.Error(w, "MCP is disabled (MCP=off)", http.StatusNotFound)
+				return
+			}
+			mcp.ServeHTTP(w, r)
 		case p == "/_ui" || strings.HasPrefix(p, "/_ui/"):
 			uiHandler.ServeHTTP(w, r)
 		case p == "/" && isBrowser(r):

@@ -28,6 +28,7 @@ type Config struct {
 	SecretKey  string
 	VerifyAuth bool
 	Buckets    []string // created at startup; the first is the suggested AWS_BUCKET
+	MCP        bool     // whether /_mcp is served
 }
 
 type API struct {
@@ -186,6 +187,7 @@ type infoJSON struct {
 	SecretKey     string `json:"secretKey"`
 	VerifyAuth    bool   `json:"verifyAuth"`
 	DefaultBucket string `json:"defaultBucket"`
+	MCP           bool   `json:"mcp"`
 }
 
 func (a *API) info(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +195,7 @@ func (a *API) info(w http.ResponseWriter, r *http.Request) {
 	if len(a.cfg.Buckets) > 0 {
 		bucket = a.cfg.Buckets[0]
 	}
-	writeJSON(w, http.StatusOK, infoJSON{a.cfg.PublicURL, a.cfg.Region, a.cfg.AccessKey, a.cfg.SecretKey, a.cfg.VerifyAuth, bucket})
+	writeJSON(w, http.StatusOK, infoJSON{a.cfg.PublicURL, a.cfg.Region, a.cfg.AccessKey, a.cfg.SecretKey, a.cfg.VerifyAuth, bucket, a.cfg.MCP})
 }
 
 func (a *API) listBuckets(w http.ResponseWriter, r *http.Request) {

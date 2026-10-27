@@ -22,6 +22,7 @@ type Config struct {
 	AutoCreateBuckets bool     // AUTO_CREATE_BUCKETS
 	CORSOrigins       []string // CORS_ORIGINS
 	LogFile           string   // LOG_FILE; "off" disables file logging
+	MCP               bool     // MCP; "off" disables the /_mcp endpoint
 }
 
 // Load reads .env (if present) and the environment.
@@ -73,6 +74,9 @@ func FromEnv(getenv func(string) string) (Config, error) {
 	}
 
 	var err error
+	if c.MCP, err = parseOnOff(get("MCP", "on")); err != nil {
+		return c, fmt.Errorf("MCP: %w", err)
+	}
 	if c.AutoCreateBuckets, err = strconv.ParseBool(get("AUTO_CREATE_BUCKETS", "false")); err != nil {
 		return c, fmt.Errorf("AUTO_CREATE_BUCKETS: %w", err)
 	}
@@ -80,4 +84,14 @@ func FromEnv(getenv func(string) string) (Config, error) {
 	port := c.Addr[strings.LastIndex(c.Addr, ":")+1:]
 	c.PublicURL = strings.TrimRight(get("PUBLIC_URL", "http://localhost:"+port), "/")
 	return c, nil
+}
+
+func parseOnOff(v string) (bool, error) {
+	switch strings.ToLower(v) {
+	case "on", "true", "1":
+		return true, nil
+	case "off", "false", "0":
+		return false, nil
+	}
+	return false, fmt.Errorf("want on or off, got %q", v)
 }

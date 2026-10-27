@@ -26,7 +26,9 @@ export function filterEvents(
     if (status === 'errors' && !isError(e)) return false
     if (status === 'writes' && !writeMethods.has(e.method)) return false
     if (!needle) return true
-    return [e.op, e.bucket, e.key, e.path, e.errorCode, e.userAgent].some((v) => v?.toLowerCase().includes(needle))
+    return [e.op, e.bucket, e.key, e.path, e.errorCode, e.userAgent, e.requestId].some((v) =>
+      v?.toLowerCase().includes(needle),
+    )
   })
 }
 
@@ -181,6 +183,11 @@ function Detail({ event, onClose }: { event: RequestEvent; onClose: () => void }
           <span className="font-mono text-xs break-all">{event.userAgent || '—'}</span>
         </DetailRow>
         <DetailRow label="Time">{new Date(event.time).toLocaleString()}</DetailRow>
+        {event.requestId && (
+          <DetailRow label="Request ID">
+            <span className="font-mono text-xs">{event.requestId}</span>
+          </DetailRow>
+        )}
       </dl>
       {canOpen && (
         <div className="border-t border-line p-3">
@@ -271,7 +278,7 @@ export function Activity() {
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-faint" />
             <Input
               aria-label="Search requests"
-              placeholder="Search operation, key, error…"
+              placeholder="Search operation, key, error, request ID…"
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="h-7 pl-8"

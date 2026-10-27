@@ -21,6 +21,11 @@ describe('filterEvents', () => {
     expect(filterEvents(log, 'all', '', new Set(['GetObject', 'HeadObject']))).toHaveLength(3)
   })
 
+  it('finds a request by ID, as pasted from an app error', () => {
+    const withIds = log.map((e, i) => ({ ...e, requestId: `REQ${i}ABC` }))
+    expect(filterEvents(withIds, 'all', 'req2abc').map((e) => e.key)).toEqual(['missing.txt'])
+  })
+
   it('combines operations with status and search', () => {
     expect(keys(filterEvents(log, 'errors', '', new Set(['GetObject'])))).toEqual(['GetObject missing.txt'])
     expect(filterEvents(log, 'writes', '', new Set(['GetObject']))).toEqual([])

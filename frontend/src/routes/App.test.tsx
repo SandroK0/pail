@@ -167,7 +167,7 @@ describe('Activity', () => {
     const es = FakeEventSource.latest()
     act(() => {
       es.open()
-      es.emit({ op: 'PutObject', method: 'PUT', key: 'a.txt', status: 200 })
+      es.emit({ op: 'PutObject', method: 'PUT', key: 'a.txt', status: 200, requestId: '0BE03810ACD7C0D1' })
       es.emit({ op: 'HeadObject', method: 'HEAD', key: 'b.txt', status: 404, errorCode: 'NoSuchKey' })
       es.emit({ op: 'ListObjectsV2', method: 'GET', key: '', status: 200 })
     })
@@ -188,6 +188,7 @@ describe('Activity', () => {
     await user.click(screen.getByText('a.txt'))
     const detail = screen.getByRole('complementary', { name: 'Request detail' })
     expect(within(detail).getByRole('heading', { name: 'PutObject' })).toBeInTheDocument()
+    expect(within(detail).getByText('0BE03810ACD7C0D1')).toBeInTheDocument()
     expect(within(detail).getByRole('link', { name: 'Open object →' })).toHaveAttribute('href', '/b/laravel?preview=a.txt')
   })
 
@@ -262,6 +263,13 @@ describe('Activity', () => {
 })
 
 describe('Setup', () => {
+  it('hides the MCP section when MCP is off', async () => {
+    fakeApi({ laravel: {} }, { mcp: false })
+    renderApp('/setup')
+    await screen.findByText(/AWS_ENDPOINT=/)
+    expect(screen.queryByText(/claude mcp add/)).not.toBeInTheDocument()
+  })
+
   it('shows a ready-to-paste .env and runs the connection test', async () => {
     fakeApi({ laravel: {}, media: {} }, { endpoint: 'http://localhost:9000', verifyAuth: true })
     const { user } = renderApp('/setup')
@@ -271,6 +279,8 @@ describe('Setup', () => {
 
     await user.selectOptions(screen.getByLabelText('Bucket'), 'media')
     expect(screen.getByText(/AWS_BUCKET=media/)).toBeInTheDocument()
+
+    expect(screen.getByText('claude mcp add --transport http pail http://localhost:9000/_mcp')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Run test against media/ }))
     for (const step of ['HeadBucket', 'PutObject', 'GetObject', 'DeleteObject']) {
