@@ -7,3 +7,7 @@ app.log
 /start.sh
 
 /PLAN.md
+
+# Built UI (embedded into the binary); keep the placeholder so go:embed compiles
+/web/dist/*
+!/web/dist/.gitkeep

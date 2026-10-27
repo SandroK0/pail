@@ -1,84 +1,128 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"go-objectstore/config"
+	"go-objectstore/internal/adminapi"
+	"go-objectstore/internal/events"
+	"go-objectstore/internal/s3api"
+	"go-objectstore/internal/server"
+	"go-objectstore/internal/store"
+	"go-objectstore/web"
 )
 
-type JsonResponse struct {
-	Message string `json:"message"`
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
-}
-
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	file, header, err := r.FormFile("file")
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, JsonResponse{Message: "Error retrieving the file from the request"})
-		return
-	}
-	defer file.Close()
-
-	path := r.FormValue("path")
-	dirPath := filepath.Join(config.StoragePath, path)
-	err = os.MkdirAll(dirPath, os.ModePerm)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error creating the directory"})
-		return
-	}
-
-	fileName := header.Filename
-	filePath := filepath.Join(dirPath, fileName)
-
-	createdFile, err := os.Create(filePath)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error creating the file"})
-		return
-	}
-
-	_, err = io.Copy(createdFile, file)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, JsonResponse{Message: "Error saving the file"})
-		return
-	}
-	createdFile.Close()
-
-	writeJSON(w, http.StatusOK, JsonResponse{Message: "File uploaded successfully"})
-}
-
 func main() {
-	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("cannot open log file: %v", err)
-	}
-	defer logFile.Close()
-	log.SetOutput(logFile)
-
-	config.Load()
-
-	if err := os.MkdirAll(config.StoragePath, 0o755); err != nil {
-		log.Fatalf("cannot create storage directory %q: %v", config.StoragePath, err)
+		return err
 	}
 
-	http.HandleFunc("/api/upload", uploadHandler)
-
-	fmt.Println("Server starting on port 8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		panic(err)
+	var logOut io.Writer = os.Stderr
+	if cfg.LogFile != "" {
+		f, err := os.OpenFile(cfg.LogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+		if err != nil {
+			return fmt.Errorf("open log file: %w", err)
+		}
+		defer f.Close()
+		logOut = io.MultiWriter(os.Stderr, f)
 	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(logOut, nil)))
+
+	st, err := store.Open(cfg.DataDir)
+	if err != nil {
+		return fmt.Errorf("open store %q: %w", cfg.DataDir, err)
+	}
+	defer st.Close()
+	for _, b := range cfg.Buckets {
+		if err := st.CreateBucket(context.Background(), b); err != nil && !errors.Is(err, store.ErrBucketExists) {
+			return fmt.Errorf("create bucket %q: %w", b, err)
+		}
+	}
+
+	broker := events.NewBroker(1000)
+	s3 := s3api.New(st, s3api.Config{
+		Region:            cfg.Region,
+		AccessKey:         cfg.AccessKey,
+		SecretKey:         cfg.SecretKey,
+		VerifyAuth:        cfg.VerifyAuth,
+		AutoCreateBuckets: cfg.AutoCreateBuckets,
+		CORSOrigins:       cfg.CORSOrigins,
+	}, broker)
+	admin := adminapi.New(st, broker, adminapi.Config{
+		PublicURL:  cfg.PublicURL,
+		Region:     cfg.Region,
+		AccessKey:  cfg.AccessKey,
+		SecretKey:  cfg.SecretKey,
+		VerifyAuth: cfg.VerifyAuth,
+		Buckets:    cfg.Buckets,
+	})
+
+	srv := &http.Server{
+		Addr:              cfg.Addr,
+		Handler:           server.New(s3, admin, web.FS()),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	errc := make(chan error, 1)
+	go func() { errc <- srv.ListenAndServe() }()
+
+	printBanner(cfg)
+	select {
+	case err := <-errc:
+		return err
+	case <-ctx.Done():
+	}
+	slog.Info("shutting down")
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return srv.Shutdown(shutdownCtx)
+}
+
+func printBanner(cfg config.Config) {
+	bucket := "laravel"
+	if len(cfg.Buckets) > 0 {
+		bucket = cfg.Buckets[0]
+	}
+	auth := "off (any credentials accepted)"
+	if cfg.VerifyAuth {
+		auth = "verify"
+	}
+	fmt.Printf(`
+  go-objectstore is running
+
+  UI        %[1]s/_ui/
+  S3        %[1]s
+  Data      %[2]s
+  Auth      %[3]s
+
+  Laravel .env:
+    FILESYSTEM_DISK=s3
+    AWS_ACCESS_KEY_ID=%[4]s
+    AWS_SECRET_ACCESS_KEY=%[5]s
+    AWS_DEFAULT_REGION=%[6]s
+    AWS_BUCKET=%[7]s
+    AWS_ENDPOINT=%[1]s
+    AWS_USE_PATH_STYLE_ENDPOINT=true
+    AWS_URL=%[1]s/%[7]s
+
+`, cfg.PublicURL, cfg.DataDir, auth, cfg.AccessKey, cfg.SecretKey, cfg.Region, bucket)
 }
