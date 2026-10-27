@@ -107,7 +107,8 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	body := &countingReader{ReadCloser: r.Body}
 	r.Body = body
 
-	w.Header().Set("X-Amz-Request-Id", requestID())
+	reqID := requestID()
+	w.Header().Set("X-Amz-Request-Id", reqID)
 	w.Header().Set("Server", "pail")
 	h.setCORS(w, r)
 
@@ -129,6 +130,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if h.events != nil {
 		e := events.Event{
+			RequestID:    reqID,
 			Time:         start,
 			Op:           w.op,
 			Method:       r.Method,

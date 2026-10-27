@@ -73,7 +73,12 @@ func TestErrorFormat(t *testing.T) {
 		t.Fatalf("status %d, type %s", resp.StatusCode, resp.Header.Get("Content-Type"))
 	}
 	body := readAll(t, resp)
-	for _, want := range []string{xml.Header[:5], "<Code>NoSuchBucket</Code>", "<Resource>/missing/key</Resource>", "<RequestId>" + resp.Header.Get("X-Amz-Request-Id")} {
+	id := resp.Header.Get("X-Amz-Request-Id")
+	for _, want := range []string{
+		xml.Header[:5], "<Code>NoSuchBucket</Code>", "<Resource>/missing/key</Resource>", "<RequestId>" + id,
+		// The ID is in the message too, so it reaches the app's error log.
+		"<Message>The specified bucket does not exist (pail request " + id + ")</Message>",
+	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("body missing %q:\n%s", want, body)
 		}
@@ -381,7 +386,7 @@ func TestBucketMiscEndpoints(t *testing.T) {
 func TestEventsArePublished(t *testing.T) {
 	e := newEnv(t, Config{})
 	seed(t, e, "logged", nil)
-	e.do(t, "PUT", "/logged/a.txt", strings.NewReader("12345"), map[string]string{"User-Agent": "aws-sdk-php/3.300"}, false)
+	putResp := e.do(t, "PUT", "/logged/a.txt", strings.NewReader("12345"), map[string]string{"User-Agent": "aws-sdk-php/3.300"}, false)
 	e.do(t, "GET", "/logged/missing", nil, nil, true)
 
 	recent := e.events.Recent()
@@ -392,6 +397,9 @@ func TestEventsArePublished(t *testing.T) {
 	if put.Op != "PutObject" || put.Bucket != "logged" || put.Key != "a.txt" || put.Status != 200 ||
 		put.BytesIn != 5 || put.AccessKey != testAK || put.UserAgent != "aws-sdk-php/3.300" || put.DurationMs < 0 {
 		t.Errorf("put event = %+v", put)
+	}
+	if put.RequestID == "" || put.RequestID != putResp.Header.Get("X-Amz-Request-Id") || put.RequestID == get.RequestID {
+		t.Errorf("request IDs: event %q, header %q, other %q", put.RequestID, putResp.Header.Get("X-Amz-Request-Id"), get.RequestID)
 	}
 	if get.Op != "GetObject" || get.Status != 404 || get.ErrorCode != "NoSuchKey" || get.BytesOut == 0 || get.AccessKey != "" {
 		t.Errorf("get event = %+v", get)

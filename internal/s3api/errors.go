@@ -3,6 +3,7 @@ package s3api
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -95,11 +96,15 @@ func (h *Handler) writeError(w *recorder, r *http.Request, e *apiError) {
 		w.WriteHeader(e.Status)
 		return
 	}
+	id := w.Header().Get("X-Amz-Request-Id")
 	writeXML(w, e.Status, errorXML{
-		Code:      e.Code,
-		Message:   e.Message,
+		Code: e.Code,
+		// SDKs put the error message into their exception text, which is what
+		// ends up in laravel.log. Including the request ID there lets you (or
+		// an agent via MCP) find the exact request from a logged error.
+		Message:   fmt.Sprintf("%s (pail request %s)", e.Message, id),
 		Resource:  r.URL.Path,
-		RequestID: w.Header().Get("X-Amz-Request-Id"),
+		RequestID: id,
 	})
 }
 

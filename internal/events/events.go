@@ -24,6 +24,7 @@ type Event struct {
 	AccessKey    string    `json:"accessKey,omitempty"`
 	Presigned    bool      `json:"presigned,omitempty"`
 	UserAgent    string    `json:"userAgent,omitempty"`
+	RequestID    string    `json:"requestId,omitempty"` // also sent as x-amz-request-id
 }
 
 const subscriberBuffer = 256
