@@ -11,6 +11,15 @@
       "port": 8080
     },
     {
+      "name": "objectstore-verify",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "AUTH=verify exec go run ."
+      ],
+      "port": 8080
+    },
+    {
       "name": "playground",
       "runtimeExecutable": "php",
       "runtimeArgs": [
