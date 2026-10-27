@@ -252,7 +252,9 @@ func (h *Handler) route(w *recorder, r *http.Request, req *request) {
 
 	if bucket == "" {
 		w.op = "ListBuckets"
-		if r.Method != http.MethodGet {
+		// HEAD is answered too (net/http drops the body), so health checks
+		// probing "/" don't show up as errors in the request log.
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			h.writeError(w, r, errMethodNotAllowed)
 			return
 		}

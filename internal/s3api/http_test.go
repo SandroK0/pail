@@ -218,6 +218,14 @@ func TestRawAWSChunkedPut(t *testing.T) {
 	}
 }
 
+func TestHeadRootForHealthChecks(t *testing.T) {
+	e := newEnv(t, Config{})
+	resp := e.do(t, "HEAD", "/", nil, nil, true)
+	if resp.StatusCode != 200 || readAll(t, resp) != "" {
+		t.Fatalf("HEAD / = %d", resp.StatusCode)
+	}
+}
+
 func TestMetadataHeadersAreLowercase(t *testing.T) {
 	e := newEnv(t, Config{})
 	seed(t, e, "meta", nil)
