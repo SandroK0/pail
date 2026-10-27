@@ -8,7 +8,7 @@ import { AppProviders, newQueryClient, routes } from './router'
 
 // Apply the saved theme before first paint.
 try {
-  applyTheme((localStorage.getItem('objectstore:theme') as 'light' | 'dark' | 'system' | null) ?? 'system')
+  applyTheme((localStorage.getItem('pail:theme') as 'light' | 'dark' | 'system' | null) ?? 'system')
 } catch {
   applyTheme('system')
 }

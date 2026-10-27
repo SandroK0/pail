@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"go-objectstore/internal/awschunked"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/awschunked"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 const xmlns = "http://s3.amazonaws.com/doc/2006-03-01/"

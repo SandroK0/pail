@@ -12,13 +12,13 @@ import (
 	"syscall"
 	"time"
 
-	"go-objectstore/config"
-	"go-objectstore/internal/adminapi"
-	"go-objectstore/internal/events"
-	"go-objectstore/internal/s3api"
-	"go-objectstore/internal/server"
-	"go-objectstore/internal/store"
-	"go-objectstore/web"
+	"github.com/SandroK0/pail/config"
+	"github.com/SandroK0/pail/internal/adminapi"
+	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/pail/internal/s3api"
+	"github.com/SandroK0/pail/internal/server"
+	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/pail/web"
 )
 
 func main() {
@@ -107,7 +107,7 @@ func printBanner(cfg config.Config) {
 		auth = "verify"
 	}
 	fmt.Printf(`
-  go-objectstore is running
+  pail is running
 
   UI        %[1]s/_ui/
   S3        %[1]s

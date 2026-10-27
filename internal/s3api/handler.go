@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"go-objectstore/internal/events"
-	"go-objectstore/internal/sigv4"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/pail/internal/sigv4"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 type Config struct {
@@ -108,7 +108,7 @@ func (h *Handler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	r.Body = body
 
 	w.Header().Set("X-Amz-Request-Id", requestID())
-	w.Header().Set("Server", "go-objectstore")
+	w.Header().Set("Server", "pail")
 	h.setCORS(w, r)
 
 	req := &request{}

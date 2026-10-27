@@ -1,4 +1,4 @@
-module go-objectstore
+module github.com/SandroK0/pail
 
 go 1.27.1
 

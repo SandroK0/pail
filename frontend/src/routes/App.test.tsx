@@ -89,7 +89,7 @@ describe('Sidebar', () => {
     const before = document.documentElement.classList.contains('dark')
     await user.click(screen.getByRole('button', { name: 'Toggle theme' }))
     expect(document.documentElement.classList.contains('dark')).toBe(!before)
-    expect(localStorage.getItem('objectstore:theme')).toBe(before ? 'light' : 'dark')
+    expect(localStorage.getItem('pail:theme')).toBe(before ? 'light' : 'dark')
   })
 
   it('opens the shortcuts sheet with ?', async () => {

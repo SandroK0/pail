@@ -29,7 +29,7 @@ export function Sidebar({ theme }: { theme: ReturnType<typeof useTheme> }) {
         <div className="grid size-5 place-items-center rounded-md bg-accent text-white">
           <Database className="size-3" strokeWidth={2.5} />
         </div>
-        <span className="font-semibold tracking-tight">Object Store</span>
+        <span className="font-semibold tracking-tight">Pail</span>
         <span className="ml-auto text-[11px] text-faint">local</span>
       </div>
 

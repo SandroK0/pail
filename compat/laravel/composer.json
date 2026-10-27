@@ -1,6 +1,6 @@
 {
-    "name": "go-objectstore/laravel-compat",
-    "description": "Exercises Laravel's S3 disk against a running go-objectstore.",
+    "name": "pail/laravel-compat",
+    "description": "Exercises Laravel's S3 disk against a running pail server.",
     "type": "project",
     "require": {
         "php": "^8.2",

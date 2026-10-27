@@ -39,7 +39,7 @@ func isBrowser(r *http.Request) bool {
 		strings.Contains(r.Header.Get("Accept"), "text/html")
 }
 
-const placeholder = `<!doctype html><meta charset="utf-8"><title>go-objectstore</title>
+const placeholder = `<!doctype html><meta charset="utf-8"><title>Pail</title>
 <body style="font:14px system-ui;background:#0b0b0c;color:#d4d4d8;display:grid;place-items:center;height:100vh;margin:0">
 <div><p>The UI has not been built.</p><pre style="color:#a1a1aa">cd frontend &amp;&amp; npm install &amp;&amp; npm run build</pre></div>`
 

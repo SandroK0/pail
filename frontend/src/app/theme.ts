@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 export type ThemePref = 'light' | 'dark' | 'system'
 
-const STORAGE_KEY = 'objectstore:theme'
+const STORAGE_KEY = 'pail:theme'
 
 function readPref(): ThemePref {
   try {

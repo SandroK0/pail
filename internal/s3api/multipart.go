@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"go-objectstore/internal/sigv4"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/sigv4"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 type initiateMultipartUploadResult struct {

@@ -92,7 +92,7 @@ export function shortUserAgent(ua: string): string {
     [/aws-sdk-go-v2\/(\S+)/, 'aws-sdk-go-v2'],
     [/aws-sdk-js\/(\S+)/, 'aws-sdk-js'],
     [/Boto3\/(\S+)/, 'boto3'],
-    [/go-objectstore-selftest/, 'self-test'],
+    [/pail-selftest/, 'self-test'],
     [/curl\/(\S+)/, 'curl'],
   ]
   for (const [re, label] of known) {

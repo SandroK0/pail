@@ -85,7 +85,7 @@ describe('shortUserAgent', () => {
     ['aws-sdk-php/3.336.0 OS/Darwin GuzzleHttp/7 lang/php#8.4', 'aws-sdk-php 3.336.0'],
     ['aws-cli/2.17.0 md/awscrt', 'aws-cli 2.17.0'],
     ['aws-sdk-go-v2/1.36.0 os/macos', 'aws-sdk-go-v2 1.36.0'],
-    ['go-objectstore-selftest', 'self-test'],
+    ['pail-selftest', 'self-test'],
     ['curl/8.7.1', 'curl 8.7.1'],
     ['Mozilla/5.0 (Macintosh)', 'browser'],
     ['custom-client/1.0 extra', 'custom-client/1.0'],

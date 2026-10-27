@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"go-objectstore/internal/sigv4"
+	"github.com/SandroK0/pail/internal/sigv4"
 )
 
 type stepJSON struct {
@@ -35,8 +35,8 @@ func (a *API) selftest(w http.ResponseWriter, r *http.Request) {
 	}
 	b := make([]byte, 6)
 	rand.Read(b)
-	objectURL := a.objectURL(body.Bucket, ".objectstore-selftest/"+hex.EncodeToString(b)+".txt")
-	const payload = "hello from go-objectstore"
+	objectURL := a.objectURL(body.Bucket, ".pail-selftest/"+hex.EncodeToString(b)+".txt")
+	const payload = "hello from pail"
 
 	steps := []struct {
 		name, method, url string
@@ -60,7 +60,7 @@ func (a *API) selftest(w http.ResponseWriter, r *http.Request) {
 		step := stepJSON{Name: s.name}
 		req, err := http.NewRequestWithContext(r.Context(), s.method, s.url, strings.NewReader(s.body))
 		if err == nil {
-			req.Header.Set("User-Agent", "go-objectstore-selftest")
+			req.Header.Set("User-Agent", "pail-selftest")
 			sigv4.Sign(req, a.cfg.AccessKey, a.cfg.SecretKey, a.cfg.Region, a.now())
 			var resp *http.Response
 			if resp, err = a.client.Do(req); err == nil {

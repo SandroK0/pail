@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"go-objectstore/internal/events"
-	"go-objectstore/internal/s3api"
-	"go-objectstore/internal/sigv4"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/pail/internal/s3api"
+	"github.com/SandroK0/pail/internal/sigv4"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 type Config struct {

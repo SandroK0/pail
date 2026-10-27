@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"go-objectstore/internal/awschunked"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/awschunked"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 // apiError is an S3 error response.

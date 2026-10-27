@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"go-objectstore/internal/events"
-	"go-objectstore/internal/s3api"
-	"go-objectstore/internal/store"
+	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/pail/internal/s3api"
+	"github.com/SandroK0/pail/internal/store"
 )
 
 type env struct {
