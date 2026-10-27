@@ -156,8 +156,11 @@ func writeObjectHeaders(w http.ResponseWriter, obj *store.Object, q url.Values) 
 	h.Set("Last-Modified", obj.LastModified.Format(http.TimeFormat))
 	h.Set("Accept-Ranges", "bytes")
 	h.Set("X-Amz-Storage-Class", "STANDARD")
+	// Set directly rather than via h.Set, which would canonicalise the name to
+	// X-Amz-Meta-Author. S3 sends these lowercase, and aws-sdk-php derives
+	// metadata keys from the header name verbatim.
 	for k, v := range obj.Metadata {
-		h.Set("X-Amz-Meta-"+k, v)
+		h["x-amz-meta-"+k] = []string{v}
 	}
 	for k, v := range obj.Headers {
 		h.Set(k, v)

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -214,6 +215,24 @@ func TestRawAWSChunkedPut(t *testing.T) {
 	}
 	if _, err := e.store.HeadObject(t.Context(), "raw", "short"); err == nil {
 		t.Fatal("a failed upload was stored")
+	}
+}
+
+func TestMetadataHeadersAreLowercase(t *testing.T) {
+	e := newEnv(t, Config{})
+	seed(t, e, "meta", nil)
+	e.do(t, "PUT", "/meta/k", strings.NewReader("x"), map[string]string{"X-Amz-Meta-Author": "ada"}, true)
+
+	// Read the raw response: http.Response canonicalises header names.
+	conn, err := net.Dial("tcp", strings.TrimPrefix(e.srv.URL, "http://"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	io.WriteString(conn, "HEAD /meta/k HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+	raw, _ := io.ReadAll(conn)
+	if !strings.Contains(string(raw), "\r\nx-amz-meta-author: ada\r\n") {
+		t.Fatalf("metadata header not sent lowercase:\n%s", raw)
 	}
 }
 
