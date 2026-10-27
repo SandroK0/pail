@@ -1,0 +1,13 @@
+{
+    "name": "go-objectstore/laravel-compat",
+    "description": "Exercises Laravel's S3 disk against a running go-objectstore.",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "illuminate/filesystem": "^12.0",
+        "league/flysystem-aws-s3-v3": "^3.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
