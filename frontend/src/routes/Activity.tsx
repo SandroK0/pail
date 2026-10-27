@@ -1,4 +1,5 @@
-import { Activity as ActivityIcon, Pause, Play, Search, Trash2, X } from 'lucide-react'
+import * as Dropdown from '@radix-ui/react-dropdown-menu'
+import { Activity as ActivityIcon, Check, ChevronDown, Pause, Play, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
@@ -13,14 +14,100 @@ type StatusFilter = 'all' | 'errors' | 'writes'
 
 const writeMethods = new Set(['PUT', 'POST', 'DELETE'])
 
-export function filterEvents(events: RequestEvent[], status: StatusFilter, text: string): RequestEvent[] {
+export function filterEvents(
+  events: RequestEvent[],
+  status: StatusFilter,
+  text: string,
+  ops: ReadonlySet<string> = new Set(),
+): RequestEvent[] {
   const needle = text.trim().toLowerCase()
   return events.filter((e) => {
+    if (ops.size > 0 && !ops.has(e.op)) return false
     if (status === 'errors' && !isError(e)) return false
     if (status === 'writes' && !writeMethods.has(e.method)) return false
     if (!needle) return true
     return [e.op, e.bucket, e.key, e.path, e.errorCode, e.userAgent].some((v) => v?.toLowerCase().includes(needle))
   })
+}
+
+/** Operations in the log, most frequent first. */
+export function operationCounts(events: RequestEvent[]): [string, number][] {
+  const counts = new Map<string, number>()
+  for (const e of events) counts.set(e.op, (counts.get(e.op) ?? 0) + 1)
+  return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+}
+
+function OperationFilter({
+  events,
+  selected,
+  onChange,
+}: {
+  events: RequestEvent[]
+  selected: ReadonlySet<string>
+  onChange: (ops: Set<string>) => void
+}) {
+  const counts = useMemo(() => {
+    const list = operationCounts(events)
+    // Keep selected operations listed even once they leave the log, so they can be unticked.
+    for (const op of selected) if (!list.some(([o]) => o === op)) list.push([op, 0])
+    return list
+  }, [events, selected])
+  const toggle = (op: string) => {
+    const next = new Set(selected)
+    if (next.has(op)) next.delete(op)
+    else next.add(op)
+    onChange(next)
+  }
+  const label =
+    selected.size === 0 ? 'All operations' : selected.size === 1 ? [...selected][0] : `${selected.size} operations`
+
+  return (
+    <Dropdown.Root>
+      <Dropdown.Trigger asChild>
+        <Button size="sm" aria-label="Filter by operation" className={cx(selected.size > 0 && 'border-accent/60 text-accent')}>
+          {label}
+          <ChevronDown className="size-3 opacity-60" />
+        </Button>
+      </Dropdown.Trigger>
+      <Dropdown.Portal>
+        <Dropdown.Content
+          align="start"
+          sideOffset={4}
+          className="z-50 max-h-80 min-w-56 animate-pop-in overflow-y-auto rounded-lg border border-line bg-raised p-1 shadow-pop"
+        >
+          {counts.length === 0 && <p className="px-2 py-1.5 text-muted">No requests yet</p>}
+          {counts.map(([op, n]) => (
+            <Dropdown.CheckboxItem
+              key={op}
+              checked={selected.has(op)}
+              onCheckedChange={() => toggle(op)}
+              onSelect={(e) => e.preventDefault()} // keep the menu open for multi-select
+              className="group flex h-7 cursor-pointer items-center gap-2 rounded px-2 outline-none data-highlighted:bg-hover"
+            >
+              <span className="grid size-3.5 place-items-center rounded-[4px] border border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent">
+                <Dropdown.ItemIndicator>
+                  <Check className="size-2.5 text-white" strokeWidth={3} />
+                </Dropdown.ItemIndicator>
+              </span>
+              <span className="flex-1">{op}</span>
+              <span className="text-xs text-faint tabular-nums">{n}</span>
+            </Dropdown.CheckboxItem>
+          ))}
+          {selected.size > 0 && (
+            <>
+              <Dropdown.Separator className="my-1 h-px bg-line" />
+              <Dropdown.Item
+                onSelect={() => onChange(new Set())}
+                className="flex h-7 cursor-pointer items-center rounded px-2 text-muted outline-none data-highlighted:bg-hover data-highlighted:text-fg"
+              >
+                Show all operations
+              </Dropdown.Item>
+            </>
+          )}
+        </Dropdown.Content>
+      </Dropdown.Portal>
+    </Dropdown.Root>
+  )
 }
 
 function StatusBadge({ status }: { status: number }) {
@@ -113,6 +200,7 @@ export function Activity() {
   const { events, connected, markSeen, clear } = useEvents()
   const [status, setStatus] = useState<StatusFilter>('all')
   const [text, setText] = useState('')
+  const [ops, setOps] = useState<Set<string>>(new Set())
   const [paused, setPaused] = useState<RequestEvent[] | null>(null)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -122,7 +210,7 @@ export function Activity() {
   }, [markSeen])
 
   const source = paused ?? events
-  const shown = useMemo(() => filterEvents(source, status, text), [source, status, text])
+  const shown = useMemo(() => filterEvents(source, status, text, ops), [source, status, text, ops])
   const selected = source.find((e) => e.id === selectedId)
   const newWhilePaused = paused ? events.length - paused.length : 0
 
@@ -178,6 +266,7 @@ export function Activity() {
               </button>
             ))}
           </div>
+          <OperationFilter events={source} selected={ops} onChange={setOps} />
           <div className="relative max-w-xs flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-faint" />
             <Input

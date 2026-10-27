@@ -191,6 +191,43 @@ describe('Activity', () => {
     expect(within(detail).getByRole('link', { name: 'Open object →' })).toHaveAttribute('href', '/b/laravel?preview=a.txt')
   })
 
+  it('filters by operation type', async () => {
+    fakeApi()
+    const { user } = renderApp('/activity')
+    const es = FakeEventSource.latest()
+    act(() => {
+      es.open()
+      es.emit({ op: 'PutObject', method: 'PUT', key: 'put.txt' })
+      es.emit({ op: 'GetObject', key: 'get-1.txt' })
+      es.emit({ op: 'GetObject', key: 'get-2.txt' })
+      es.emit({ op: 'HeadObject', method: 'HEAD', key: 'head.txt' })
+    })
+    await screen.findByText('put.txt')
+
+    const trigger = screen.getByRole('button', { name: 'Filter by operation' })
+    expect(trigger).toHaveTextContent('All operations')
+    await user.click(trigger)
+    const menu = await screen.findByRole('menu')
+    // Most frequent first, with counts.
+    const items = within(menu).getAllByRole('menuitemcheckbox')
+    expect(items.map((i) => i.textContent)).toEqual(['GetObject2', 'HeadObject1', 'PutObject1'])
+
+    await user.click(items[0])
+    // The menu stays open for picking several.
+    await user.click(within(menu).getByRole('menuitemcheckbox', { name: /PutObject/ }))
+    expect(screen.getByText('3 requests')).toBeInTheDocument()
+    expect(screen.queryByText('head.txt')).not.toBeInTheDocument()
+    expect(trigger).toHaveTextContent('2 operations')
+
+    await user.click(within(menu).getByRole('menuitemcheckbox', { name: /PutObject/ }))
+    expect(trigger).toHaveTextContent('GetObject')
+    expect(screen.getByText('2 requests')).toBeInTheDocument()
+
+    await user.click(within(menu).getByRole('menuitem', { name: 'Show all operations' }))
+    expect(trigger).toHaveTextContent('All operations')
+    expect(screen.getByText('4 requests')).toBeInTheDocument()
+  })
+
   it('pauses and resumes', async () => {
     fakeApi()
     const { user } = renderApp('/activity')
