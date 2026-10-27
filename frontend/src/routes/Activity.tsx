@@ -209,8 +209,8 @@ export function Activity() {
                   <th className="font-normal">Object</th>
                   <th className="w-16 font-normal">Status</th>
                   <th className="w-20 text-right font-normal">Size</th>
-                  <th className="w-20 text-right font-normal">Duration</th>
-                  <th className="w-44 pr-4 pl-4 font-normal">Client</th>
+                  <th className="hidden w-20 text-right font-normal lg:table-cell">Duration</th>
+                  <th className="hidden w-44 pr-4 pl-4 font-normal xl:table-cell">Client</th>
                 </tr>
               </thead>
               <tbody>
@@ -247,8 +247,8 @@ export function Activity() {
                     <td className="text-right text-muted tabular-nums">
                       {formatBytes(e.method === 'GET' ? e.bytesOut : e.bytesIn)}
                     </td>
-                    <td className="text-right text-muted tabular-nums">{formatDuration(e.durationMs)}</td>
-                    <td className="truncate pr-4 pl-4 text-muted">{shortUserAgent(e.userAgent ?? '')}</td>
+                    <td className="hidden text-right text-muted tabular-nums lg:table-cell">{formatDuration(e.durationMs)}</td>
+                    <td className="hidden truncate pr-4 pl-4 text-muted xl:table-cell">{shortUserAgent(e.userAgent ?? '')}</td>
                   </tr>
                 ))}
               </tbody>
