@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/local-s3/internal/events"
 )
 
 func TestHints(t *testing.T) {

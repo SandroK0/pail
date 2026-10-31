@@ -8,8 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/SandroK0/pail/internal/awschunked"
-	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/local-s3/internal/awschunked"
+	"github.com/SandroK0/local-s3/internal/store"
 )
 
 // apiError is an S3 error response.

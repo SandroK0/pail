@@ -22,8 +22,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 
-	"github.com/SandroK0/pail/internal/events"
-	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/local-s3/internal/events"
+	"github.com/SandroK0/local-s3/internal/store"
 )
 
 const (

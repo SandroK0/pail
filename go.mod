@@ -1,4 +1,4 @@
-module github.com/SandroK0/pail
+module github.com/SandroK0/local-s3
 
 go 1.27.1
 

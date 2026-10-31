@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SandroK0/pail/internal/awschunked"
-	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/local-s3/internal/awschunked"
+	"github.com/SandroK0/local-s3/internal/store"
 )
 
 const xmlns = "http://s3.amazonaws.com/doc/2006-03-01/"

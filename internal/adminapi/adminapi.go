@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SandroK0/pail/internal/events"
-	"github.com/SandroK0/pail/internal/s3api"
-	"github.com/SandroK0/pail/internal/sigv4"
-	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/local-s3/internal/events"
+	"github.com/SandroK0/local-s3/internal/s3api"
+	"github.com/SandroK0/local-s3/internal/sigv4"
+	"github.com/SandroK0/local-s3/internal/store"
 )
 
 type Config struct {

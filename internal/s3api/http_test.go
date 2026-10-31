@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SandroK0/pail/internal/sigv4"
-	"github.com/SandroK0/pail/internal/store"
+	"github.com/SandroK0/local-s3/internal/sigv4"
+	"github.com/SandroK0/local-s3/internal/store"
 )
 
 // do sends a raw request to the handler, signing it unless anonymous.

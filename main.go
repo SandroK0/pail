@@ -12,14 +12,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/SandroK0/pail/config"
-	"github.com/SandroK0/pail/internal/adminapi"
-	"github.com/SandroK0/pail/internal/events"
-	"github.com/SandroK0/pail/internal/mcpserver"
-	"github.com/SandroK0/pail/internal/s3api"
-	"github.com/SandroK0/pail/internal/server"
-	"github.com/SandroK0/pail/internal/store"
-	"github.com/SandroK0/pail/web"
+	"github.com/SandroK0/local-s3/config"
+	"github.com/SandroK0/local-s3/internal/adminapi"
+	"github.com/SandroK0/local-s3/internal/events"
+	"github.com/SandroK0/local-s3/internal/mcpserver"
+	"github.com/SandroK0/local-s3/internal/s3api"
+	"github.com/SandroK0/local-s3/internal/server"
+	"github.com/SandroK0/local-s3/internal/store"
+	"github.com/SandroK0/local-s3/web"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".

@@ -1,4 +1,4 @@
-# pail
+# local-s3
 
 A small S3-compatible object store for local development: one Go binary, and a live log of every S3 call your app makes. Works with
 any S3 client that supports path-style addressing; Laravel gets a setup page.
@@ -31,7 +31,7 @@ page in the UI shows this block for any bucket and can test the connection.
 
 ## Ask your AI assistant (MCP)
 
-pail serves an MCP endpoint at `/_mcp`, so Claude Code (or any MCP client) can
+local-s3 serves an MCP endpoint at `/_mcp`, so Claude Code (or any MCP client) can
 look at your buckets, read files and inspect the live request log:
 
 ```bash

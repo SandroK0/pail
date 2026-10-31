@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/SandroK0/pail/internal/events"
+	"github.com/SandroK0/local-s3/internal/events"
 )
 
 // hint explains the likely cause of a failed request and how to fix it, in
