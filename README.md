@@ -1,5 +1,3 @@
-handcoding this project
-
 # pail
 
 A small S3-compatible object store for local development: one Go binary, and a live log of every S3 call your app makes. Works with
